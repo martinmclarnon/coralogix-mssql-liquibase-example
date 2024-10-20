@@ -1,0 +1,52 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: demo-update-mssqldb
+  namespace: local-cicd
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: demo-update-mssqldb
+  template:
+    metadata:
+      labels:
+        app: demo-update-mssqldb
+    spec:
+      containers:
+        - name: local-cicd-demo-update-mssqldb
+          image: demo-update-mssqldb:latest
+          ports:
+            - containerPort: 5432
+          resources:
+            limits:
+              cpu: "200m" # 1 CPU core
+              memory: "768Mi" # 256 megabytes, 512 megabytes, 768 megabytes, 1024 megabytes
+            requests:
+              cpu: "150m"  # 0.75 CPU cores
+              memory: "512Mi"  # 256 megabytes, 512 megabytes, 768 megabytes, 1024 megabytes
+          env:
+            - name: LIQUIBASE_COMMAND_URL
+              value: ""
+            - name: LIQUIBASE_COMMAND_CHANGELOG_FILE
+              value: "changelog-master.xml"
+            - name: LIQUIBASE_LOG_LEVEL
+              value: "INFO"
+            - name: LIQUIBASE_SQL_LOG_LEVEL
+              value: "INFO"
+            - name: LIQUIBASE_SEARCH_PATH
+              value: "changelog/,changelog/schema/,changelog/schema/tables/,changelog/seed/,changelog/seed/data/"
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: demo-update-mssqldb
+  namespace: local-cicd
+spec:
+  selector:
+    app: demo-update-mssqldb
+  ports:
+    - protocol: TCP
+      port: 5432  # Port to expose
+      targetPort: 5432  # Port the container listens on
+  type: ClusterIP  # Use ClusterIP for internal service discovery within the cluster
